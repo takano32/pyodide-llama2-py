@@ -39,9 +39,8 @@
       await pyodide.loadPackage("micropip");
       const micropip = pyodide.pyimport("micropip");
       await micropip.install(package_list);
-      await pyodide.runPython([
+      await pyodide.runPythonAsync([
         `from pyodide.http import pyfetch`,
-        `import asyncio`,
         `stories_filename = "stories15M.bin"`,
         `stories_url = "./" + stories_filename`,
         `tokenizer_filename = "tokenizer.bin"`,
@@ -51,11 +50,8 @@
         `        res = await pyfetch(url)`,
         `        data = await res.bytes()`,
         `        f.write(data)`,
-        `async def call_download():`,
-        `    await download(stories_url, stories_filename)`,
-        `    await download(tokenizer_url, tokenizer_filename)`,
-        `loop = asyncio.get_event_loop()`,
-        `loop.run_until_complete(call_download())`,
+        `await download(stories_url, stories_filename)`,
+        `await download(tokenizer_url, tokenizer_filename)`,
       ].join("\n"));
       output.value += "Ready!\n";
       return pyodide;
