@@ -39,29 +39,24 @@
       await pyodide.loadPackage("micropip");
       const micropip = pyodide.pyimport("micropip");
       await micropip.install(package_list);
-
-      /*
-      const modelResponse = await fetch("./stories15M.bin");
-      const modelArrayBuffer = await modelResponse.arrayBuffer();
-      await pyodide.FS.writeFile("stories15M.bin", modelArrayBuffer);
-
-      const tokenizerResponse = await fetch("./tokenizer.bin");
-      const tokenizerArrayBuffer = await tokenizerResponse.arrayBuffer();
-      await pyodide.FS.writeFile("tokenizer.bin", tokenizerArrayBuffer);
-      */
-
       await pyodide.runPython([
-        `from pyodide.http import open_url`,
-        `stories_url = "./stories15M.bin"`,
-        `tokenizer_url = "./tokenizer.bin"`,
-        `with open("stories15M.bin", mode='wb') as f:`,
-        `    buf = open_url(stories_url)`,
-        `    f.write(buf.read().encode())`,
-        `with open("tokenizer.bin", mode='wb') as f:`,
-        `    buf = open_url(tokenizer_url)`,
-        `    f.write(buf.read().encode())`,
+        `from pyodide.http import pyfetch`,
+        `import asyncio`,
+        `stories_filename = "stories15M.bin"`,
+        `stories_url = "./" + stories_filename`,
+        `tokenizer_filename = "tokenizer.bin"`,
+        `tokenizer_url = "./" + tokenizer_filename`,
+        `async def download(url, filename):`,
+        `    with open(filename, mode='wb') as f:`,
+        `        res = await pyfetch(url)`,
+        `        data = await res.bytes()`,
+        `        f.write(data)`,
+        `async def call_download():`,
+        `    await download(stories_url, stories_filename)`,
+        `    await download(tokenizer_url, tokenizer_filename)`,
+        `loop = asyncio.get_event_loop()`,
+        `loop.run_until_complete(call_download())`,
       ].join("\n"));
-
       output.value += "Ready!\n";
       return pyodide;
     }
@@ -72,12 +67,6 @@
       try {
         let output = await pyodide.runPython([
           `import llama2_py`,
-          /*
-          `import os`,
-          `files = [f for f in os.listdir('.') if os.path.isfile(f)]`,
-          `for f in files:`,
-          `    print(f)`,
-          */
           `prompt = "${code.value}"`,
           `reply = llama2_py.run({"checkpoint": "stories15M.bin", "temperature": 0.0, "steps": 256, "prompt": prompt})`,
           `reply`,
