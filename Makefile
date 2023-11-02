@@ -1,6 +1,6 @@
 
 
-.PHONY: run
+.PHONY: run clean
 
 run:	stories15M.bin tokenizer.bin node_modules/.bin/http-server
 	npx http-server -a 0.0.0.0 -p 8080 --cros
@@ -13,4 +13,8 @@ tokenizer.bin:
 
 node_modules/.bin/http-server:
 	yarn
+
+clean:
+	rm -f stories15M.bin tokenizer.bin
+	rm -rf node_modules
 
