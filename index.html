@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+  </head>
+
+  <body>
+    <p>
+      You can execute any Python code. Just enter something in the box below and
+      click the button.
+    </p>
+    <input id="code" value="sum([1, 2, 3, 4, 5])" />
+    <button onclick="evaluatePython()">Run</button>
+    <br />
+    <br />
+    <div>Output:</div>
+    <textarea id="output" style="width: 100%;" rows="23" disabled></textarea>
+
+    <script>
+      const output = document.getElementById("output");
+      const code = document.getElementById("code");
+
+      function addToOutput(s) {
+        output.value += ">>>" + code.value + "\n" + s + "\n";
+      }
+
+      output.value = "Initializing...\n";
+      // init Pyodide
+      async function main() {
+        let package_list = [
+          "llama2-py",
+        ];
+        let pyodide = await loadPyodide();
+        await pyodide.loadPackage("micropip");
+        const micropip = pyodide.pyimport("micropip");
+        await micropip.install(package_list);
+        output.value += "Ready!\n";
+        return pyodide;
+      }
+      let pyodideReadyPromise = main();
+
+      async function evaluatePython() {
+        let pyodide = await pyodideReadyPromise;
+        try {
+          let output = pyodide.runPython([
+            `from pyodide.http import open_url`,
+            `import llama2_py`,
+            `stories_url = "https://huggingface.co/karpathy/tinyllamas/resolve/main/stories15M.bin"`,
+            `tokenizer_url = "https://github.com/tairov/llama2.py/raw/master/tokenizer.bin"`,
+            `with open("stories15M.bin", mode='wb') as f:`,
+            `    buf = open_url(stories_url)`,
+            `    f.write(buf.read().encode())`,
+            `with open("tokenizer.bin", mode='wb') as f:`,
+            `    buf = open_url(tokenizer_url)`,
+            `    f.write(buf.read().encode())`,
+            `prompt = "Dream comes true this day"`,
+            `reply = llama2_py.run({"checkpoint": "stories15M.bin", "temperature": 0.0, "steps": 256, "prompt": prompt})`,
+            `print(reply)`,
+            code.value
+          ].join("\n"));
+          addToOutput(output);
+        } catch (err) {
+          addToOutput(err);
+        }
+      }
+    </script>
+  </body>
+</html>
