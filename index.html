@@ -72,6 +72,12 @@
       try {
         let output = await pyodide.runPython([
           `import llama2_py`,
+          /*
+          `import os`,
+          `files = [f for f in os.listdir('.') if os.path.isfile(f)]`,
+          `for f in files:`,
+          `    print(f)`,
+          */
           `prompt = "${code.value}"`,
           `reply = llama2_py.run({"checkpoint": "stories15M.bin", "temperature": 0.0, "steps": 256, "prompt": prompt})`,
           `reply`,
