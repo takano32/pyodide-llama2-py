@@ -63,9 +63,15 @@
       try {
         let output = await pyodide.runPython([
           `import llama2_py`,
+          `import io`,
+          `from contextlib import redirect_stdout`,
+          ``,
           `prompt = "${code.value}"`,
-          `reply = llama2_py.run({"checkpoint": "stories15M.bin", "temperature": 0.0, "steps": 256, "prompt": prompt})`,
-          `reply`,
+          `buf = io.StringIO()`,
+          `with redirect_stdout(buf):`,
+          `    res = llama2_py.run({"checkpoint": "stories15M.bin", "temperature": 0.0, "steps": 256, "prompt": prompt})`,
+          `reply = buf.getvalue()`,
+          `reply`
         ].join("\n"));
         addToOutput(output);
       } catch (err) {
